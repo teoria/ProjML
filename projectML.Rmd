@@ -1,0 +1,89 @@
+---
+title: "Project - Pratical Machine Learning"
+author: "Rodrigo Carneiro"
+date: "September 19, 2015"
+output: html_document
+---
+
+Coursera Project about Pratical Machine Learning.
+
+
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement – a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. 
+
+One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, your goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. 
+
+They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here: http://groupware.les.inf.puc-rio.br/har (see the section on the Weight Lifting Exercise Dataset). 
+
+
+Six young health participants were asked to perform one set of 10 repetitions of the Unilateral Dumbbell Biceps Curl in five different fashions: exactly according to the specification (Class A), throwing the elbows to the front (Class B), lifting the dumbbell only halfway (Class C), lowering the dumbbell only halfway (Class D) and throwing the hips to the front (Class E).
+
+Read more: http://groupware.les.inf.puc-rio.br/har#ixzz3mhwxXuHf
+
+## Get and Clean Data
+
+```{r eval= F}
+dados <- read.csv("pml-training.csv",header = T)
+
+names(dados)
+summary(dados)
+
+## Remove unused columms
+dados <- dados[,-1:7]
+
+## Remove uncomplete columms
+dados <-dados[,colSums(is.na(dados))==0]
+
+## Remove Factor columms
+isFactor <- sapply(dados[,1:dim(dados)[2]], function(x){!is.factor(x)}  )
+dadosNotFactor <- dados[, isFactor ]
+
+dadosAccel <- dadosNotFactor
+dadosAccel$classe <- dados$classe
+
+```
+
+## Fit Model
+
+```{r eval= F}
+library(caret)
+set.seed(3433)
+
+
+## create a training and test sets
+inTrain = createDataPartition(
+        dadosAccel$classe, 
+        p=0.75 , 
+        times = 1,
+        list = F 
+        )
+training = dadosAccel[ inTrain,]
+testing = dadosAccel[-inTrain,]
+ 
+ 
+
+set.seed(1908)
+## fit model with randomForest algorithm
+model <- train(classe ~ .,  method="rf", data=training)   
+
+## verify accuracy
+confusionMatrix(testing$classe, predict(model,testing[,-last]))
+ 
+
+
+```
+
+#Predict
+
+```{r eval= F}
+
+dadosProject <- read.csv("pml-testing.csv",header = T)
+head(dadosProject)
+
+result <- predict(model,dadosProject)
+result
+
+
+```
+
+ 
+ 
